@@ -379,13 +379,6 @@ License information will be added after the project license is finalized.
 - Data Science
 - Web Development
 - Software Development
-
-| Profile | Link |
-|---|---|
-| GitHub | `[Add your GitHub profile](https://github.com/<your-username>)` |
-| LinkedIn | `[Add your LinkedIn profile](https://www.linkedin.com/in/<your-profile>)` |
-| Portfolio | `[Add your portfolio](https://your-portfolio-link.com)` |
-
 ***
 
 <div align="center">
