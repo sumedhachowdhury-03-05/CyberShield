@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CyberShield — Cybersecurity Complaint Portal</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Segoe UI", Inter, Arial, sans-serif;
+    }
+
+    :root {
+      --bg: #050a14;
+      --panel: #0b1424;
+      --panel2: #101c31;
+      --border: #1d2c45;
+      --text: #e7eef8;
+      --muted: #94a7c0;
+      --cyan: #22d3ee;
+      --green: #34d399;
+      --red: #f87171;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    .screen {
+      display: none;
+      min-height: 100vh;
+    }
+
+    .screen.active {
+      display: block;
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 28px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #22d3ee, #38bdf8);
+      color: #041019;
+      font-weight: 750;
+      cursor: pointer;
+      transition: 0.25s;
+      text-decoration: none;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 35px rgba(34, 211, 238, 0.25);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--cyan);
+      color: var(--cyan);
+      box-shadow: none;
+    }
+
+    .full {
+      width: 100%;
+    }
+
+    /* COVER SCREEN */
+    .cover {
+      display: grid;
+      place-items: center;
+      min-height: 100vh;
+      text-align: center;
+      padding: 40px;
+      background:
+        radial-gradient(circle at 15% 20%, rgba(34, 211, 238, 0.15), transparent 30%),
+        radial-gradient(circle at 85% 75%, rgba(52, 211, 153, 0.1), transparent 30%),
+        var(--bg);
+    }
+
+    .cover h1 {
+      font-size: clamp(2.6rem, 8vw, 5rem);
+      margin: 18px 0;
+      letter-spacing: -3px;
+    }
+
+    .cover h1 span {
+      background: linear-gradient(90deg, #22d3ee, #34d399);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .cover p {
+      max-width: 650px;
+      margin: 0 auto 35px;
+      color: var(--muted);
+      font-size: 1.1rem;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 8px 18px;
+      border: 1px solid rgba(34, 211, 238, 0.4);
+      border-radius: 999px;
+      background: rgba(34, 211, 238, 0.08);
+      color: var(--cyan);
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    /* LOGIN SCREEN */
+    .login-wrap {
+      display: grid;
+      place-items: center;
+      min-height: 100vh;
+      padding: 30px;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 430px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.45);
+    }
+
+    .login-card h2 {
+      margin-bottom: 8px;
+    }
+
+    .login-card p {
+      color: var(--muted);
+      margin-bottom: 28px;
+      font-size: 0.95rem;
+    }
+
+    label {
+      display: block;
+      font-weight: 650;
+      margin-bottom: 18px;
+      font-size: 0.92rem;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      margin-top: 8px;
+      padding: 13px 15px;
+      background: #081020;
+      color: var(--text);
+      border: 1px solid #24354f;
+      border-radius: 10px;
+      font: inherit;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15);
+    }
+
+    /* DASHBOARD SCREEN */
+    .dashboard {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      background: #060d18;
+      border-right: 1px solid var(--border);
+      padding: 25px 20px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 1.2rem;
+      margin-bottom: 35px;
+    }
+
+    .sidebar-brand span {
+      color: var(--cyan);
+    }
+
+    .side-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      color: var(--muted);
+      font-weight: 650;
+      cursor: pointer;
+      margin-bottom: 8px;
+      transition: 0.2s;
+    }
+
+    .side-link:hover,
+    .side-link.active {
+      background: rgba(34, 211, 238, 0.09);
+      color: var(--cyan);
+    }
+
+    .user-box {
+      margin-top: 30px;
+      padding: 15px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .user-box strong {
+      color: var(--text);
+    }
+
+    .main-area {
+      padding: 30px clamp(20px, 4vw, 50px);
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .topbar h2 {
+      font-size: 1.8rem;
+    }
+
+    .topbar p {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .hamburger {
+      display: none;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 1.3rem;
+      padding: 10px 15px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .dash-page {
+      display: none;
+    }
+
+    .dash-page.active {
+      display: block;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 30px;
+      margin-bottom: 25px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 18px;
+    }
+
+    .mini-card {
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      padding: 25px;
+      transition: 0.25s;
+    }
+
+    .mini-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(34, 211, 238, 0.5);
+    }
+
+    .mini-card h3 {
+      color: var(--cyan);
+      margin-bottom: 10px;
+    }
+
+    .mini-card p {
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .hacker-visual {
+      position: relative;
+      height: 360px;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: #030711;
+      margin-bottom: 30px;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .hacker-overlay {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      background: rgba(3, 7, 17, 0.45);
+    }
+
+    .hacker-overlay h3 {
+      font-size: 1.7rem;
+      color: var(--cyan);
+      text-shadow: 0 0 25px rgba(34, 211, 238, 0.55);
+    }
+
+    .form-status {
+      display: none;
+      margin-top: 18px;
+      padding: 15px;
+      border-radius: 10px;
+      font-weight: 650;
+    }
+
+    .form-status.success {
+      display: block;
+      background: rgba(52, 211, 153, 0.12);
+      border: 1px solid rgba(52, 211, 153, 0.4);
+      color: var(--green);
+    }
+
+    .form-status.error {
+      display: block;
+      background: rgba(248, 113, 113, 0.12);
+      border: 1px solid rgba(248, 113, 113, 0.4);
+      color: var(--red);
+    }
+
+    .warning {
+      margin-top: 20px;
+      padding: 15px;
+      border-left: 4px solid var(--cyan);
+      background: rgba(34, 211, 238, 0.07);
+      color: var(--muted);
+      border-radius: 8px;
+      font-size: 0.92rem;
+    }
+
+    @media (max-width: 900px) {
+      .dashboard {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: fixed;
+        z-index: 50;
+        width: 270px;
+        transform: translateX(-100%);
+        transition: 0.3s;
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .hamburger {
+        display: block;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- COVER SCREEN -->
+  <section id="coverScreen" class="screen active">
+    <div class="cover">
+      <div>
+        <span class="badge">Cybersecurity Complaint Portal</span>
+
+        <h1>Report. Protect.<br /><span>Stay Secure.</span></h1>
+
+        <p>
+          Report phishing, scams, hacking, harassment, privacy leaks, malware,
+          and other cyber threats. Get clear guidance and take action.
+        </p>
+
+        <button class="btn" onclick="showScreen('loginScreen')">
+          Get Started
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOGIN SCREEN -->
+  <section id="loginScreen" class="screen">
+    <div class="login-wrap">
+      <div class="login-card">
+        <h2>Welcome to CyberShield</h2>
+        <p>Enter your details to access the complaint and guidance dashboard.</p>
+
+        <form id="loginForm">
+          <label>
+            Full name *
+            <input type="text" id="loginName" required />
+          </label>
+
+          <label>
+            Gmail address *
+            <input type="email" id="loginEmail" required placeholder="example@gmail.com" />
+          </label>
+
+          <label>
+            Phone number <span style="color: var(--muted)">(optional)</span>
+            <input type="tel" id="loginPhone" />
+          </label>
+
+          <button class="btn full" type="submit">Enter Dashboard</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- DASHBOARD SCREEN -->
+  <section id="dashboardScreen" class="screen">
+    <div class="dashboard">
+
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+          <span>🛡</span> CyberShield
+        </div>
+
+        <div class="side-link active" data-page="complaints" onclick="openDashPage('complaints', this)">
+          📝 Complaints
+        </div>
+
+        <div class="side-link" data-page="contact" onclick="openDashPage('contact', this)">
+          📧 Contact
+        </div>
+
+        <div class="side-link" data-page="advice" onclick="openDashPage('advice', this)">
+          🛡 Security Advice
+        </div>
+
+        <div class="side-link" data-page="frauds" onclick="openDashPage('frauds', this)">
+          ⚠️ Types of Frauds
+        </div>
+
+        <div class="user-box">
+          Logged in as:<br />
+          <strong id="sidebarUserName">User</strong><br />
+          <span id="sidebarUserEmail"></span>
+        </div>
+      </aside>
+
+      <main class="main-area">
+        <div class="topbar">
+          <div>
+            <h2 id="dashTitle">Complaints</h2>
+            <p id="dashSubtitle">Report cybersecurity incidents securely.</p>
+          </div>
+
+          <button class="hamburger" onclick="toggleSidebar()">☰</button>
+        </div>
+
+        <!-- COMPLAINTS PAGE -->
+        <div id="complaints" class="dash-page active">
+          <div class="hacker-visual">
+            <canvas id="matrixCanvas"></canvas>
+
+            <div class="hacker-overlay">
+              <div>
+                <h3>Cyber Threat Monitoring</h3>
+                <p style="color: var(--muted)">Detect • Report • Protect</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h3 style="margin-bottom: 20px">Submit a Cybersecurity Complaint</h3>
+
+            <form id="complaintForm">
+              <div class="grid">
+                <label>
+                  Full name *
+                  <input type="text" name="full_name" required />
+                </label>
+
+                <label>
+                  Gmail address *
+                  <input type="email" name="email" required />
+                </label>
+
+                <label>
+                  Phone number
+                  <input type="tel" name="phone" />
+                </label>
+
+                <label>
+                  Complaint type *
+                  <select name="complaint_type" required>
+                    <option value="">Select complaint type</option>
+                    <option>Phishing / Fake Website</option>
+                    <option>Online Scam / Fraud</option>
+                    <option>Account Hacking</option>
+                    <option>Cyberbullying / Harassment</option>
+                    <option>Identity Theft</option>
+                    <option>Privacy / Data Leak</option>
+                    <option>Suspicious Message / Email</option>
+                    <option>Social Media Security</option>
+                    <option>Malware / Suspicious Software</option>
+                    <option>Other</option>
+                  </select>
+                </label>
+
+                <label>
+                  Incident date *
+                  <input type="date" name="incident_date" required />
+                </label>
+
+                <label>
+                  Platform / website involved
+                  <input type="text" name="platform" />
+                </label>
+
+                <label>
+                  Financial loss
+                  <input type="text" name="financial_loss" />
+                </label>
+
+                <label>
+                  Relevant link
+                  <input type="url" name="links" />
+                </label>
+              </div>
+
+              <label>
+                Describe the incident *
+                <textarea name="description" rows="6" required></textarea>
+              </label>
+
+              <label>
+                Additional information
+                <textarea name="additional_info" rows="4"></textarea>
+              </label>
+
+              <button class="btn full" type="submit">Submit Complaint</button>
+
+              <div id="complaintStatus" class="form-status"></div>
+            </form>
+
+            <div class="warning">
+              Do not submit passwords, OTPs, banking PINs, recovery codes, or full card details.
+            </div>
+          </div>
+        </div>
+
+        <!-- CONTACT PAGE -->
+        <div id="contact" class="dash-page">
+          <div class="panel">
+            <h3 style="margin-bottom: 20px">Contact CyberShield</h3>
+
+            <form id="contactForm">
+              <div class="grid">
+                <label>
+                  Full name *
+                  <input type="text" name="full_name" required />
+                </label>
+
+                <label>
+                  Gmail address *
+                  <input type="email" name="email" required />
+                </label>
+
+                <label>
+                  Phone number
+                  <input type="tel" name="phone" />
+                </label>
+
+                <label>
+                  Subject *
+                  <input type="text" name="subject" required />
+                </label>
+              </div>
+
+              <label>
+                Message *
+                <textarea name="message" rows="6" required></textarea>
+              </label>
+
+              <button class="btn full" type="submit">Send Message</button>
+
+              <div id="contactStatus" class="form-status"></div>
+            </form>
+          </div>
+        </div>
+
+        <!-- ADVICE PAGE -->
+        <div id="advice" class="dash-page">
+          <div class="grid">
+            <div class="mini-card">
+              <h3>Phishing</h3>
+              <p>Do not click unknown links. Check sender addresses and visit official websites directly.</p>
+            </div>
+
+            <div class="mini-card">
+              <h3>Strong Passwords</h3>
+              <p>Use long, unique passwords and a password manager for important accounts.</p>
+            </div>
+
+            <div class="mini-card">
+              <h3>Two-Factor Authentication</h3>
+              <p>Enable 2FA on Gmail, banking, and social media accounts.</p>
+            </div>
+
+            <div class="mini-card">
+              <h3>Online Scams</h3>
+              <p>Be careful with urgency, guaranteed profit, unknown payment methods, and remote-access requests.</p>
+            </div>
+
+            <div class="mini-card">
+              <h3>Social Media</h3>
+              <p>Review privacy settings, remove unknown apps, and check active login sessions.</p>
+            </div>
+
+            <div class="mini-card">
+              <h3>Malware</h3>
+              <p>Download apps only from official stores and keep your device updated.</p>
+            </div>
+          </div>
+
+          <div class="warning">
+            This website provides general cybersecurity guidance only. It is not a replacement for law enforcement,
+            professional cybersecurity investigation, or emergency services.
+          </div>
+        </div>
+
+        <!-- FRAUDS PAGE -->
+        <div id="frauds" class="dash-page">
+          <div class="grid">
+            <div class="mini-card">
+              <h3>🎣 Phishing Fraud</h3>
+              <p>Fake websites or emails designed to steal login credentials and personal data.</p>
+            </div>
+
+            <div class="mini-card">
+              <h3>💳 Payment Fraud</h3>
+              <p>Fake sellers, UPI scams, card fraud, and unauthorized transactions.</p>
+            </div>
+
+            <div class="mini-card">
+              <h3>💼 Job Scams</h3>
+              <p>Fake job offers asking for registration fees, personal documents, or crypto payments.</p>
+            </div>
+
+            <div class="mini-card">
+              <h3>📈 Investment Scams</h3>
+              <p>Fake trading platforms, crypto schemes, and guaranteed-return investment fraud.</p>
+            </div>
+
+            <div class="mini-card">
+              <h3>❤️ Romance Scams</h3>
+              <p>Fraudsters build fake relationships to request money, gift cards, or crypto transfers.</p>
+            </div>
+
+            <div class="mini-card">
+              <h3>👤 Identity Theft</h3>
+              <p>Misuse of your name, photos, documents, or personal information.</p>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </section>
+
+  <script>
+    /* REPLACE THESE 3 VALUES */
+    const EMAILJS_PUBLIC_KEY = "mwzsG5vsWe9aWB6Bl";
+    const EMAILJS_SERVICE_ID = "service_9c34tpf";
+    const EMAILJS_TEMPLATE_ID = "template_ud9mbbn";
+    const OWNER_EMAIL = "sumedhachowdhury874@gmail.com";
+
+    emailjs.init({
+      publicKey: EMAILJS_PUBLIC_KEY
+    });
+
+    function showScreen(id) {
+      document.querySelectorAll(".screen").forEach(screen => {
+        screen.classList.remove("active");
+      });
+
+      document.getElementById(id).classList.add("active");
+      window.scrollTo(0, 0);
+    }
+
+    document.getElementById("loginForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const name = document.getElementById("loginName").value.trim();
+      const email = document.getElementById("loginEmail").value.trim();
+
+      document.getElementById("sidebarUserName").textContent = name;
+      document.getElementById("sidebarUserEmail").textContent = email;
+
+      /* Cover page disappears completely after login */
+      showScreen("dashboardScreen");
+    });
+
+    function toggleSidebar() {
+      document.getElementById("sidebar").classList.toggle("open");
+    }
+
+    function openDashPage(id, element) {
+      document.querySelectorAll(".dash-page").forEach(page => {
+        page.classList.remove("active");
+      });
+
+      document.querySelectorAll(".side-link").forEach(link => {
+        link.classList.remove("active");
+      });
+
+      document.getElementById(id).classList.add("active");
+      element.classList.add("active");
+
+      document.getElementById("sidebar").classList.remove("open");
+
+      const titles = {
+        complaints: ["Complaints", "Report cybersecurity incidents securely."],
+        contact: ["Contact", "Send a message or question to CyberShield."],
+        advice: ["Security Advice", "Practical steps to stay protected online."],
+        frauds: ["Types of Frauds", "Learn about common online fraud and scam patterns."]
+      };
+
+      document.getElementById("dashTitle").textContent = titles[id][0];
+      document.getElementById("dashSubtitle").textContent = titles[id][1];
+
+      window.scrollTo(0, 0);
+    }
+
+    function setStatus(id, type, message) {
+      const box = document.getElementById(id);
+      box.className = "form-status " + type;
+      box.innerHTML = message;
+    }
+
+    /* COMPLAINT FORM */
+    document.getElementById("complaintForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const button = e.target.querySelector("button[type=submit]");
+      button.disabled = true;
+      button.textContent = "Submitting...";
+
+      const data = Object.fromEntries(new FormData(e.target).entries());
+
+      const params = {
+        to_email: OWNER_EMAIL,
+        email_subject: `[Cybersecurity Complaint] — ${data.complaint_type} — ${data.full_name}`,
+        full_name: data.full_name,
+        email: data.email,
+        phone: data.phone || "Not provided",
+        complaint_type: data.complaint_type,
+        incident_date: data.incident_date,
+        platform: data.platform || "Not provided",
+        financial_loss: data.financial_loss || "Not provided",
+        links: data.links || "Not provided",
+        description: data.description,
+        additional_info: data.additional_info || "Not provided",
+        submitted_at: new Date().toLocaleString()
+      };
+
+      try {
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, params);
+
+        e.target.reset();
+
+        setStatus(
+          "complaintStatus",
+          "success",
+          "<strong>Your complaint has been submitted successfully.</strong><br>Your information has been received."
+        );
+      } catch (error) {
+        console.error(error);
+
+        setStatus(
+          "complaintStatus",
+          "error",
+          "Your complaint could not be submitted. Please try again shortly."
+        );
+      } finally {
+        button.disabled = false;
+        button.textContent = "Submit Complaint";
+      }
+    });
+
+    /* CONTACT FORM */
+    document.getElementById("contactForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const button = e.target.querySelector("button[type=submit]");
+      button.disabled = true;
+      button.textContent = "Sending...";
+
+      const data = Object.fromEntries(new FormData(e.target).entries());
+
+      const params = {
+        to_email: OWNER_EMAIL,
+        email_subject: `[CyberShield Contact] — ${data.subject} — ${data.full_name}`,
+        full_name: data.full_name,
+        email: data.email,
+        phone: data.phone || "Not provided",
+        complaint_type: "Website Contact Message",
+        incident_date: new Date().toLocaleDateString(),
+        platform: "CyberShield Contact Form",
+        financial_loss: "Not applicable",
+        links: "Not applicable",
+        description: data.message,
+        additional_info: `Subject: ${data.subject}`,
+        submitted_at: new Date().toLocaleString()
+      };
+
+      try {
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, params);
+
+        e.target.reset();
+
+        setStatus(
+          "contactStatus",
+          "success",
+          "<strong>Your message has been sent successfully.</strong><br>We have received your message."
+        );
+      } catch (error) {
+        console.error(error);
+
+        setStatus(
+          "contactStatus",
+          "error",
+          "Your message could not be sent. Please try again shortly."
+        );
+      } finally {
+        button.disabled = false;
+        button.textContent = "Send Message";
+      }
+    });
+
+    /* HACKING / MATRIX ANIMATION */
+    const canvas = document.getElementById("matrixCanvas");
+    const ctx = canvas.getContext("2d");
+
+    let columns;
+    let drops;
+
+    function resizeCanvas() {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+
+      columns = Math.floor(canvas.width / 18);
+      drops = Array(columns).fill(1);
+    }
+
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    const characters = "01ABCDEF#$%&*+=<>";
+
+    function drawMatrix() {
+      ctx.fillStyle = "rgba(3, 7, 17, 0.08)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = "#22d3ee";
+      ctx.font = "15px monospace";
+
+      for (let i = 0; i < drops.length; i++) {
+        const text = characters[Math.floor(Math.random() * characters.length)];
+        ctx.fillText(text, i * 18, drops[i] * 18);
+
+        if (drops[i] * 18 > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+
+        drops[i]++;
+      }
+    }
+
+    setInterval(drawMatrix, 50);
+  </script>
+
+</body>
+</html>
